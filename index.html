@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Travel Recommendation Website - Single File</title>
+  <style>
+    :root{
+      --accent:#0f62fe;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f4f7fb;
+      --glass: rgba(255,255,255,0.7);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#eef4ff 0%,var(--bg) 100%);color:#111;min-height:100vh}
+    header{padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    nav{display:flex;gap:12px}
+    nav a{padding:8px 12px;text-decoration:none;color:var(--muted);border-radius:8px}
+    nav a.active, nav a:hover{background:var(--glass);color:var(--accent)}
+    main{padding:20px 28px}
+    .hero{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:center;margin-bottom:20px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(20,30,60,0.06)}
+    .search-row{display:flex;gap:8px}
+    input[type="text"]{flex:1;padding:10px 12px;border:1px solid #e3e7f0;border-radius:8px;font-size:15px}
+    button{background:var(--accent);color:white;border:none;padding:10px 12px;border-radius:8px;cursor:pointer}
+    #results{margin-top:14px;display:grid;gap:12px}
+    .result-item{display:flex;gap:12px;align-items:flex-start}
+    .thumb{width:120px;height:80px;border-radius:8px;object-fit:cover;flex-shrink:0}
+    h1,h2{margin:0 0 8px 0}
+    .muted{color:var(--muted);font-size:14px}
+    .about-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+    .team-list{display:flex;flex-direction:column;gap:8px}
+    .map-embed{width:100%;height:200px;border-radius:8px;border:0}
+    footer{padding:18px 28px;color:var(--muted);font-size:14px}
+    /* responsive */
+    @media (max-width:860px){
+      .hero{grid-template-columns:1fr; }
+      .brand .hide-sm{display:none}
+      .about-grid{grid-template-columns:1fr}
+      .thumb{width:100px;height:70px}
+    }
+    form label{display:block;margin-bottom:8px}
+    textarea{width:100%;min-height:100px;padding:8px;border-radius:8px;border:1px solid #e3e7f0}
+    .confirmation{margin-top:10px;color:green;font-weight:600}
+    .time-pill{background:#f1f6ff;padding:6px 10px;border-radius:999px;font-weight:600}
+    .small{font-size:13px;color:var(--muted)}
+    .gallery{display:flex;gap:8px;margin-top:8px}
+    .gallery img{width:100px;height:66px;border-radius:6px;object-fit:cover}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">TR</div>
+      <div>
+        <div style="font-weight:700">TravelRec</div>
+        <div class="small hide-sm">Personalized travel recommendations</div>
+      </div>
+    </div>
+
+    <nav id="nav">
+      <a href="#home" data-target="home" class="active">Home</a>
+      <a href="#about" data-target="about">About</a>
+      <a href="#contact" data-target="contact">Contact Us</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="home" class="card" data-section>
+      <div class="hero">
+        <div>
+          <h1>Welcome to TravelRec</h1>
+          <p class="muted">Tell us what you love — beaches, temples, cities — and we'll suggest ideal destinations with images, descriptions and the current local time.</p>
+
+          <div style="margin-top:12px" class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="small">Search destinations</div>
+                <div style="margin-top:8px" class="search-row">
+                  <input id="searchInput" type="text" placeholder="Try: beach, temple, Toronto, Japan..." />
+                  <button id="searchBtn">Search</button>
+                </div>
+                <div class="small" style="margin-top:8px">Tip: partial words work (e.g., <em>beach</em> returns beach recommendations)</div>
+              </div>
+              <div style="text-align:right">
+                <div class="small">Your timezone</div>
+                <div id="localTime" class="time-pill" style="margin-top:8px">--:--:--</div>
+              </div>
+            </div>
+
+            <div id="results"></div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="card">
+            <h2>Quick Picks</h2>
+            <p class="muted">Popular searches:</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+              <button onclick="prefill('beach')">Beaches</button>
+              <button onclick="prefill('temple')">Temples</button>
+              <button onclick="prefill('Toronto')">Toronto, Canada</button>
+              <button onclick="prefill('Bali')">Bali</button>
+            </div>
+
+            <div style="margin-top:12px">
+              <p class="small muted">Photo gallery</p>
+              <div class="gallery">
+                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=60" alt="beach">
+                <img src="https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=400&q=60" alt="temple">
+                <img src="https://images.unsplash.com/photo-1488747279002-c8523379faaa?auto=format&fit=crop&w=400&q=60" alt="city">
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" style="display:none" data-section class="card">
+      <h1>About TravelRec</h1>
+      <div class="about-grid" style="margin-top:12px">
+        <div>
+          <h2>Our mission</h2>
+          <p>We help travelers discover places they’ll love by matching preferences to curated recommendations and helpful local details.</p>
+
+          <h2 style="margin-top:12px">Team</h2>
+          <div class="team-list">
+            <div><strong>alice</strong> — Project Lead</div>
+            <div><strong>jiya</strong> — Frontend Developer</div>
+            <div><strong>karan</strong> — Content & Research</div>
+          </div>
+
+          <h2 style="margin-top:12px">History</h2>
+          <p class="muted">Founded in 2020, TravelRec started as a weekend project and grew into a small team building useful travel tools and recommendations.</p>
+        </div>
+
+        <aside>
+          <h3>Office Locations</h3>
+          <!-- Placeholder map (open in browser - requires network) -->
+          <iframe class="map-embed" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241317.11612326047!2d-74.24442056512882!3d40.69767006313266!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzPCsDM4JzUwLjgiTiA3NMKwMTQnNTIuNSJX!5e0!3m2!1sen!2sin!4v1693300000000" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+          <p class="small muted" style="margin-top:8px">Head office: Toronto • Regional: Mumbai</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" style="display:none" data-section class="card">
+      <h1>Contact Us</h1>
+      <p class="muted">Have a question or feedback? Send us a message and we'll reply soon.</p>
+
+      <form id="contactForm" style="margin-top:12px">
+        <label>
+          Name
+          <input id="cname" type="text" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e3e7f0;margin-top:6px" />
+        </label>
+        <label>
+          Email
+          <input id="cemail" type="email" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #e3e7f0;margin-top:6px" />
+        </label>
+        <label>
+          Message
+          <textarea id="cmessage" required></textarea>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button type="submit">Send Message</button>
+          <div id="contactConfirmation" class="confirmation" aria-live="polite"></div>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <footer>
+    © <span id="year"></span> TravelRec — Built for the final project demo.
+  </footer>
+
+  <script>
+    /***********************
+     * Single-file JS logic
+     ***********************/
+    // small dataset for recommendations
+    const DB = {
+      beaches: [
+        {title: "Maldives", desc: "White sand, crystal waters, perfect for relaxation.", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60"},
+        {title: "Bali, Indonesia", desc: "Surfing, rice terraces, vibrant culture.", img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=60"},
+        {title: "Tulum, Mexico", desc: "Beaches with cenotes and Mayan ruins nearby.", img: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=60"}
+      ],
+      temples: [
+        {title: "Angkor Wat, Cambodia", desc: "Ancient temple complex and UNESCO site.", img: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=800&q=60"},
+        {title: "Golden Temple, India", desc: "Center of Sikh faith — beautiful and serene.", img: "https://images.unsplash.com/photo-1588731247933-4b9c12a7dd3e?auto=format&fit=crop&w=800&q=60"},
+        {title: "Fushimi Inari, Japan", desc: "Famous torii gate path and mountain shrine.", img: "https://images.unsplash.com/photo-1533089860892-a7c2f8c3fb74?auto=format&fit=crop&w=800&q=60"}
+      ],
+      cities: {
+        "toronto": {
+          title: "Toronto, Canada",
+          desc: "CN Tower, Royal Ontario Museum, High Park.",
+          img: "https://images.unsplash.com/photo-1488747279002-c8523379faaa?auto=format&fit=crop&w=800&q=60",
+          tz: "America/Toronto"
+        },
+        "bali": {
+          title: "Bali, Indonesia",
+          desc: "Ubud, beaches, rice terraces and temples.",
+          img: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=800&q=60",
+          tz: "Asia/Makassar" // Bali uses Asia/Makassar or Asia/Jakarta depending on area; used Makassar for example
+        },
+        "tokyo": {
+          title: "Tokyo, Japan",
+          desc: "Shinjuku, Shibuya, temples and neon nightlife.",
+          img: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=60",
+          tz: "Asia/Tokyo"
+        }
+      }
+    };
+
+    // Utilities
+    const el = id => document.getElementById(id);
+    const resultsEl = el('results');
+    const searchInput = el('searchInput');
+    const searchBtn = el('searchBtn');
+
+    // Navigation (single-page behavior)
+    const navLinks = document.querySelectorAll('#nav a');
+    const sections = document.querySelectorAll('[data-section]');
+    navLinks.forEach(a => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tgt = a.dataset.target;
+      showSection(tgt);
+      history.pushState({section:tgt}, '', `#${tgt}`);
+    }));
+    function showSection(name){
+      sections.forEach(s => s.id === name ? s.style.display = '' : s.style.display = 'none');
+      navLinks.forEach(a => a.dataset.target === name ? a.classList.add('active') : a.classList.remove('active'));
+    }
+    // ensure correct section on load
+    const initial = (location.hash && location.hash.slice(1)) || 'home';
+    showSection(initial);
+
+    // Local time display for user's browser timezone
+    const localTimeEl = el('localTime');
+    function updateLocalTime(){
+      const now = new Date();
+      localTimeEl.textContent = now.toLocaleTimeString();
+    }
+    updateLocalTime();
+    setInterval(updateLocalTime, 1000);
+
+    // Prefill buttons
+    function prefill(q){
+      searchInput.value = q;
+      doSearch();
+    }
+    window.prefill = prefill;
+
+    // City -> timezone lookup fallback: for known cities use DB; else no tz
+    function showCityLocalTime(tz){
+      try {
+        const now = new Date();
+        return now.toLocaleTimeString('en-US', {timeZone: tz});
+      } catch(e){
+        return 'Unavailable';
+      }
+    }
+
+    // Render helpers
+    function makeResultCard(item){
+      const div = document.createElement('div');
+      div.className = 'result-item card';
+      div.innerHTML = `
+        <img class="thumb" src="${item.img}" alt="${escapeHtml(item.title)}">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <strong>${escapeHtml(item.title)}</strong>
+              <div class="muted" style="margin-top:6px">${escapeHtml(item.desc)}</div>
+            </div>
+            <div class="small muted" style="text-align:right"></div>
+          </div>
+        </div>
+      `;
+      return div;
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // Main search function
+    function doSearch(){
+      const q = searchInput.value.trim().toLowerCase();
+      resultsEl.innerHTML = '';
+      if(!q){
+        resultsEl.innerHTML = `<div class="muted small">Type a preference (beach, temple) or a city (e.g., Toronto) and click Search.</div>`;
+        return;
+      }
+
+      // beaches
+      if(q.includes('beach') || q.includes('beaches')){
+        const list = DB.beaches;
+        resultsEl.innerHTML = `<h3>Top Beaches</h3>`;
+        list.forEach(item => resultsEl.appendChild(makeResultCard(item)));
+        return;
+      }
+
+      // temples
+      if(q.includes('temple') || q.includes('temples')){
+        const list = DB.temples;
+        resultsEl.innerHTML = `<h3>Notable Temples</h3>`;
+        list.forEach(item => resultsEl.appendChild(makeResultCard(item)));
+        return;
+      }
+
+      // exact city matches or substring match in DB.cities
+      const cityKeys = Object.keys(DB.cities);
+      const matchedKey = cityKeys.find(k => q === k || q.includes(k) || k.includes(q));
+      if(matchedKey){
+        const city = DB.cities[matchedKey];
+        resultsEl.innerHTML = `<h3>${escapeHtml(city.title)}</h3>`;
+        const card = makeResultCard(city);
+        // add local time
+        const time = showCityLocalTime(city.tz);
+        const localDiv = document.createElement('div');
+        localDiv.className = 'small muted';
+        localDiv.style.marginTop = '8px';
+        localDiv.innerHTML = `<strong>Current Local Time:</strong> <span class="time-pill">${time}</span>`;
+        card.querySelector('div > div').appendChild(localDiv);
+        resultsEl.appendChild(card);
+        return;
+      }
+
+      // fallback: try keyword match across both lists (title/desc)
+      const fallbackMatches = [];
+      [...DB.beaches, ...DB.temples].forEach(it => {
+        const hay = (it.title + ' ' + it.desc).toLowerCase();
+        if(hay.includes(q)) fallbackMatches.push(it);
+      });
+      if(fallbackMatches.length){
+        resultsEl.innerHTML = `<h3>Matching Recommendations</h3>`;
+        fallbackMatches.forEach(it => resultsEl.appendChild(makeResultCard(it)));
+        return;
+      }
+
+      // no results
+      resultsEl.innerHTML = `<div class="muted">No results found for "<strong>${escapeHtml(q)}</strong>". Try broader terms like "beach", "temple", or use a known city name (e.g., Toronto, Tokyo).</div>`;
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') doSearch(); });
+
+    // Contact form handling (client-side)
+    const contactForm = el('contactForm');
+    contactForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      const name = el('cname').value.trim();
+      const email = el('cemail').value.trim();
+      const msg = el('cmessage').value.trim();
+      if(!name || !email || !msg){
+        el('contactConfirmation').textContent = 'Please fill all required fields.';
+        el('contactConfirmation').style.color = 'crimson';
+        return;
+      }
+      // Simulate send
+      el('contactConfirmation').style.color = 'green';
+      el('contactConfirmation').textContent = '✅ Thank you — we received your message and will reply shortly.';
+      contactForm.reset();
+    });
+
+    // small helpers for UX
+    el('year').textContent = new Date().getFullYear();
+
+    // expose a few functions for in-HTML use
+    window.doSearch = doSearch;
+
+    // Accessibility: announce initial results hint
+    resultsEl.innerHTML = `<div class="muted small">Welcome! Try the search box for personalized suggestions.</div>`;
+  </script>
+</body>
+</html>
